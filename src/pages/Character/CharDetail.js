@@ -6,6 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  Modal,
+  Pressable,
 } from 'react-native';
 import {connect} from 'react-redux';
 import {AddFavories, RemoveFavories} from '../../redux/actions/favoriesActions';
@@ -13,6 +15,7 @@ import {AddFavories, RemoveFavories} from '../../redux/actions/favoriesActions';
 const CharDetail = props => {
   const [loaded, setLoaded] = useState(false);
   const [visibleBT, setVisibleBT] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const character = props.route.params.char;
 
@@ -20,7 +23,17 @@ const CharDetail = props => {
     let jsonArray = JSON.stringify(props.favories.favories);
     setVisibleBT(jsonArray.includes(character.name));
   }, []);
-
+  const deleteFavories = () => {
+    let index = null;
+    props.favories.favories.map((x, i) => {
+      if (x.name.indexOf(character.name) !== -1) {
+        index = i;
+      }
+    });
+    props.favories.favories.splice(index, 1);
+    props.decreaseTheValue();
+    props.navigation.goBack();
+  };
   return (
     <View style={styles.screen}>
       <View style={styles.BackPress}>
@@ -42,7 +55,7 @@ const CharDetail = props => {
                 setVisibleBT(true);
               } else {
                 Alert.alert(
-                  'You cannot add more favourites. You have reached your favorite limit...',
+                  'Favori karakter ekleme sayısını aştınız. Başka bir karakteri favorilerden çıkarmalısınız.',
                 );
               }
             }}>
@@ -54,15 +67,7 @@ const CharDetail = props => {
           <TouchableOpacity
             style={styles.BackTouch}
             onPress={() => {
-              let index = null;
-              props.favories.favories.map((x, i) => {
-                if (x.name.indexOf(character.name) !== -1) {
-                  index = i;
-                }
-              });
-              props.favories.favories.splice(index, 1);
-              props.decreaseTheValue();
-              props.navigation.goBack();
+              setModalVisible(!modalVisible);
             }}>
             <Text>Favories Remove</Text>
           </TouchableOpacity>
@@ -80,6 +85,47 @@ const CharDetail = props => {
           <Text style={styles.text}>Type: No data</Text>
         )}
       </View>
+      <Modal
+        animationType="slide"
+        transparent
+        visible={modalVisible}
+        onRequestClose={() => {
+          Alert.alert('Modal has been closed.');
+          setModalVisible(!modalVisible);
+        }}>
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>
+              Silme işlemi yapılmak istendiğinde kullanıcıya {character.name}{' '}
+              isimli karakteri favorilerden kaldırmak istediğinize emin
+              misiniz?”
+            </Text>
+            <View style={{flexDirection: 'row'}}>
+              <Pressable
+                style={[
+                  styles.button,
+                  styles.buttonNo,
+                  {width: '48%', marginRight: 5},
+                ]}
+                onPress={() => setModalVisible(!modalVisible)}>
+                <Text style={styles.textStyle}>NO</Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.button,
+                  styles.buttonYes,
+                  {width: '48%', marginLeft: 5},
+                ]}
+                onPress={() => {
+                  setModalVisible(!modalVisible);
+                  deleteFavories()
+                }}>
+                <Text style={styles.textStyle}>YES</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -107,7 +153,7 @@ const styles = StyleSheet.create({
     width: 100,
   },
   BackTouch: {
-    height:'100%',
+    height: '100%',
     width: 100,
     borderWidth: 0.4,
     borderRadius: 5,
@@ -124,7 +170,7 @@ const styles = StyleSheet.create({
   image: {
     height: '70%',
     width: '80%',
-    marginTop:30
+    marginTop: 30,
   },
   title: {
     fontSize: 28,
@@ -134,6 +180,54 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 16,
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 22,
+    backgroundColor: 'rgba(52, 52, 52, 0.8)',
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2,
+  },
+  buttonOpen: {
+    backgroundColor: '#F194FF',
+  },
+  buttonClose: {
+    backgroundColor: '#2196F3',
+  },
+  buttonNo: {
+    backgroundColor: 'red',
+  },
+  buttonYes: {
+    backgroundColor: 'green',
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
   },
 });
 
